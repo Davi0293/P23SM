@@ -9,7 +9,9 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    # The zeldin/ps3dev-docker image is published for arm64 only, so it needs
+    # an ARM runner (free for public repos).
+    runs-on: ubuntu-24.04-arm
     # Prebuilt ps3dev toolchain + PSL1GHT (no 30-60 min toolchain compile)
     container: zeldin/ps3dev-docker:latest
 
