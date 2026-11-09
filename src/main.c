@@ -22,6 +22,7 @@
 #include <io/pad.h>
 #include <sys/thread.h>
 #include <sys/file.h>
+#include <sys/moduleexport.h>   /* SYS_MODULE_INFO / START / STOP (PS3DK) */
 
 /* ---- configuration ---------------------------------------------------- */
 #define POLL_INTERVAL_US   50000      /* 50 ms between pad polls            */
@@ -39,7 +40,7 @@
 #define DIGITAL1_INDEX     2
 
 #define WM_REQUEST_FILE    "/dev_hdd0/tmp/wm_request"
-#define WM_PS_COMMAND      "/pad.ps3?ps"
+#define WM_PS_COMMAND      "/pad.ps3?psbtn"
 
 /* ---- state ------------------------------------------------------------ */
 static sys_ppu_thread_t g_thread;
@@ -115,6 +116,12 @@ static void poll_thread(void *arg)
 }
 
 /* ---- PRX entry points ------------------------------------------------- */
+int module_start(size_t args, void *argp);
+int module_stop(size_t args, void *argp);
+SYS_MODULE_INFO(ps2_xmb_combo, 0, 1, 0);
+SYS_MODULE_START(module_start);
+SYS_MODULE_STOP(module_stop);
+
 int module_start(size_t args, void *argp)
 {
     (void)args; (void)argp;
