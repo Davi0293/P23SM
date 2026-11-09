@@ -17,6 +17,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <unistd.h>          /* usleep() */
 
 #include <io/pad.h>
 #include <sys/thread.h>
@@ -28,6 +29,9 @@
 #define COOLDOWN_US        1500000    /* ignore the combo after a trigger   */
 #define BOOT_DELAY_US      20000000   /* let VSH/webMAN finish booting      */
 #define MAX_PORTS          7
+
+/* PSL1GHT's sys/thread.h has no sysUsleep; use newlib's usleep() instead */
+#define sysUsleep(us)      usleep(us)
 
 /* Digital buttons, first byte group (CELL_PAD_BTN_OFFSET_DIGITAL1 = index 2) */
 #define BTN_SELECT_MASK    0x0001
