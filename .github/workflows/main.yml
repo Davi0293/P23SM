@@ -16,16 +16,50 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Locate PS3DK pieces
+      - name: Locate PS3DK pieces and set PS3DEV
+        shell: bash
         run: |
-          echo "PS3DEV=$PS3DEV  PS3DK=$PS3DK"
+          echo "Initial: PS3DEV='${PS3DEV:-}'  PS3DK='${PS3DK:-}'"
           TC=$(find / -name ps3-ppu-toolchain.cmake -not -path '/proc/*' 2>/dev/null | head -1)
           SELF=$(find / -name ps3-self.cmake -not -path '/proc/*' 2>/dev/null | head -1)
           echo "toolchain file: $TC"
           echo "ps3-self.cmake: $SELF"
           [ -n "$TC" ] && [ -n "$SELF" ] || { echo "PS3DK cmake files not found"; exit 1; }
-          echo "TC=$TC" >> "$GITHUB_ENV"
-          echo "CMDIR=$(dirname "$SELF")" >> "$GITHUB_ENV"
+
+          # PS3DK root = parent of the cmake/ dir (e.g. /opt/ps3dk-src)
+          PS3DK="${PS3DK:-$(dirname "$(dirname "$TC")")}"
+
+          # 1) Try the SDK's own env script (the toolchain file tells you to do this)
+          if [ -z "${PS3DEV:-}" ] && [ -f "$PS3DK/scripts/env.sh" ]; then
+            set +e; source "$PS3DK/scripts/env.sh"; set -e
+          fi
+
+          # 2) Fallback: derive PS3DEV from where the PPU compiler lives
+          if [ -z "${PS3DEV:-}" ]; then
+            GCC=$(find / -type f \( -name 'powerpc64-ps3-elf-gcc' -o -name 'ppu-gcc' \) \
+                  -not -path '/proc/*' 2>/dev/null | head -1)
+            echo "ppu gcc: $GCC"
+            [ -n "$GCC" ] || { echo "PPU compiler not found; cannot derive PS3DEV"; exit 1; }
+            BIN=$(dirname "$GCC")
+            ROOT=$(dirname "$BIN")
+            [ "$(basename "$ROOT")" = "ppu" ] && ROOT=$(dirname "$ROOT")
+            PS3DEV="$ROOT"
+          fi
+
+          [ -d "$PS3DEV" ] || { echo "PS3DEV=$PS3DEV is not a directory"; exit 1; }
+          echo "Resolved: PS3DEV=$PS3DEV  PS3DK=$PS3DK"
+
+          {
+            echo "TC=$TC"
+            echo "CMDIR=$(dirname "$SELF")"
+            echo "PS3DEV=$PS3DEV"
+            echo "PS3DK=$PS3DK"
+            [ -d "$PS3DEV/psl1ght" ] && echo "PSL1GHT=${PSL1GHT:-$PS3DEV/psl1ght}" || true
+          } >> "$GITHUB_ENV"
+
+          for d in "$PS3DEV/bin" "$PS3DEV/ppu/bin"; do
+            [ -d "$d" ] && echo "$d" >> "$GITHUB_PATH"
+          done
 
       - name: Configure
         run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE="$TC" -DCMAKE_MODULE_PATH="$CMDIR"
