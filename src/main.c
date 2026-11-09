@@ -116,13 +116,13 @@ static void poll_thread(void *arg)
 }
 
 /* ---- PRX entry points ------------------------------------------------- */
-int module_start(size_t args, void *argp);
-int module_stop(size_t args, void *argp);
+int ps2_xmb_start(size_t args, void *argp);
+int ps2_xmb_stop(size_t args, void *argp);
 SYS_MODULE_INFO(ps2_xmb_combo, 0, 1, 0);
-SYS_MODULE_START(module_start);
-SYS_MODULE_STOP(module_stop);
+SYS_MODULE_START(ps2_xmb_start);
+SYS_MODULE_STOP(ps2_xmb_stop);
 
-int module_start(size_t args, void *argp)
+int ps2_xmb_start(size_t args, void *argp)
 {
     (void)args; (void)argp;
     g_running = 1;
@@ -131,7 +131,7 @@ int module_start(size_t args, void *argp)
     return 0;
 }
 
-int module_stop(size_t args, void *argp)
+int ps2_xmb_stop(size_t args, void *argp)
 {
     u64 retval;
     (void)args; (void)argp;
