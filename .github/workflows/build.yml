@@ -1,0 +1,60 @@
+name: Build ps2_xmb_combo.sprx
+
+on:
+  push:
+    branches: [main, master]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+env:
+  PS3DEV: /usr/local/ps3dev
+  PSL1GHT: /usr/local/ps3dev
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install toolchain dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y autoconf automake bison flex gcc libelf-dev make \
+            texinfo libncurses5-dev patch python3 python-is-python3 wget zlib1g-dev \
+            libtool libtool-bin bzip2 libgmp3-dev pkg-config g++ libssl-dev clang git
+
+      # Building the toolchain takes a long time, so cache it.
+      - name: Cache PS3 toolchain
+        id: cache-toolchain
+        uses: actions/cache@v4
+        with:
+          path: /usr/local/ps3dev
+          key: ps3dev-toolchain-v1
+
+      - name: Build PS3 toolchain + PSL1GHT
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
+        run: |
+          sudo mkdir -p $PS3DEV && sudo chown $USER $PS3DEV
+          git clone --depth 1 https://github.com/ps3dev/ps3toolchain.git
+          cd ps3toolchain
+          export PATH=$PATH:$PS3DEV/bin:$PS3DEV/ppu/bin:$PS3DEV/spu/bin
+          ./toolchain.sh
+
+      - name: Build plugin
+        run: |
+          export PATH=$PATH:$PS3DEV/bin:$PS3DEV/ppu/bin:$PS3DEV/spu/bin
+          make
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ps2_xmb_combo
+          path: build/ps2_xmb_combo.sprx
+
+      - name: Publish release (on tag)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/ps2_xmb_combo.sprx
