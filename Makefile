@@ -21,7 +21,7 @@ CFLAGS  := -O2 -mcpu=cell -ffunction-sections -fdata-sections -Wall \
            -I$(PSL1GHT)/ppu/include -I$(PS3DEV)/ppu/include
 LDFLAGS := -nostartfiles -Wl,--gc-sections -L$(PSL1GHT)/ppu/lib \
            -Wl,-e,module_start
-LIBS    := -lio -lsysutil -llv2
+LIBS    := -lio -lsysutil -lsysfs -llv2
 
 SPRXLINKER := $(PS3DEV)/bin/sprxlinker
 MAKE_SELF  := $(PS3DEV)/bin/make_self
@@ -42,4 +42,5 @@ $(BUILD)/$(NAME).sprx: $(BUILD)/$(NAME).elf
 clean:
 	rm -rf $(BUILD)
 
-.PHONY: all clean
+.PHONY:
+all clean
