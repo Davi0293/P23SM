@@ -12,7 +12,9 @@ NAME    := ps2_xmb_combo
 BUILD   := build
 SRC     := src/main.c
 
-CC      := ppu-lv2-gcc
+# Current ps3toolchain names its compiler powerpc64-ps3-elf-gcc
+# (ppu-lv2-gcc was the name in older/Sony-style toolchains).
+CC      ?= powerpc64-ps3-elf-gcc
 CFLAGS  := -Os -mcpu=cell -ffunction-sections -fdata-sections -Wall \
            -I$(PSL1GHT)/ppu/include -I$(PS3DEV)/ppu/include
 LDFLAGS := -nostartfiles -Wl,--gc-sections -L$(PSL1GHT)/ppu/lib \
